@@ -1,3 +1,21 @@
+"""Routines for network route mapping and latency testing.
+
+The implementation of routines for utilising ICMP network packets to
+investigate packet routing within an IP network. A network "ping" is
+performed by sending a UDP data packet to an uninitialised port on the
+destination server and catching the ICMP that is returned. The time
+delta between the sending of the UDP packet and recieving the ICMP
+packet is the latency measured between the source and destination.
+
+The "hops" that a packet takes as it transverses across the network
+on its way to the destination host can be mapped through the restricing
+the Time To Live (TTL) as uesd by the traceroute command. Through performing
+several pings starting with a TTL of 1 and incrementing the TTL until the
+destination host is reached, each network router will return a ICMP timeout
+response as it received the expired UDP packet. Recording the source of each
+ICMP packet identifies the routing points of packets to the destination.
+"""
+
 import socket
 import struct
 import time
@@ -19,6 +37,14 @@ def ping(
     The "ping" action is performed by opening a RAW ICMP socket to listen for
     router responses then on a second UDP socket sending a packet of data to
     an unused UDP port and waiting for the ICMP response.
+
+    Note
+    ----
+        This function sends UDP packets and then captures the returned ICMP
+        packets. The opening of a RAW socket to captuer the returned ICMP
+        packet is a privledged task which cannot be performed from userspace.
+
+        THIS FUNCTION CAN ONLY BE USED BY PRIVLEDGED USERS (root/Administrator)
 
     Parameters
     ----------
@@ -147,6 +173,49 @@ def traceroute(
         timeout: int = 3,
         packets: int = 3,  
     ) -> dict:
+    """Perform a network 'traceroute' to map packet routing.
+
+    Using the provided endpoing address or hostname a traceroute is performed
+    that maps the routing of a packet as it transverses the network. 
+
+    To perform the route tracing, multiple ping() calls are performed to the
+    destination host starting with a TTL of 1 and incrementing the TTL value
+    with each ping() call until the destination host is reached.
+
+    For each ping() call, the network latency and the router that returned
+    the ICMP packet is reqcored which maps the route packets are taking to
+    the remote destination.
+
+    Note
+    ----
+        This function utilises the ping() function to send UDP packets and
+        capture the returned ICMP packets. The opening of a RAW socket is
+        a privledged task which cannot be performed from userspace.
+
+    Parameters
+    ----------
+    endpoint
+        Target network address or hostname to route the UDP packets too
+    port
+        Port to assign to the UDP packets, standard is 33434
+    max_ttl
+        Maximum Time To Live for UDP packets sent
+    timeout
+        Time to wait for ICMP response in seconds
+    packets
+        Number of UCP packets to send
+
+    Returns
+    -------
+    dict
+        Ping data strucutre of data collected during ping processing
+            {
+                target:  Target destination IP address
+                ttl:     Set Time To Live
+                packets: Number of packets issued in the ping
+                ping_time: [ { ping() dict } ]
+            }
+    """
 
     # make sure we have an IP address
     dest_addr = socket.gethostbyname(endpoint)

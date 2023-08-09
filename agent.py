@@ -1,13 +1,25 @@
+""" API service allowing the remote execution of ping/traceroute functions.
+
+A simple Flask based agent that will accept HTTP GET requests and then
+execute the required ping/traceroute action.
+
+The following API routes are provided:
+    - /ping?dest=<remote device>
+    - /traceroute?dest=<remote device>
+
+Note
+----
+    This API service uses RAW network sockets as part of the ping() and
+    traceroute() functions which must be performed by a privlidged user.
+
+    THIS AGENT MUST BE EXECUTED AS A PRIVLEDGED USER!
+"""
 from flask import (
     Flask,
     request,
 )
 
-import logging
 import traceroute
-
-logger = logging.getLogger(__name__)
-"""Default logger for the module."""
 
 _agent_version = "Deployable TraceRoute Agent - Proof of Concept"
 

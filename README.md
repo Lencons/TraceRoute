@@ -1,92 +1,104 @@
-# Cisco Monitor
+# Experiements with TraceRoute
 
+Just some experiements with using ICMP packets to probe and map packet routing across the network. Provided within this repository is the follow playing:
 
+* `traceroute.py` - module implementing the standard networking "ping" and "traceroute" commands
+* `agent.py` - A simple API service intended to allow the remote execution of ping/traceroute commands
 
 ## Getting started
+The python package dependencies for all modules within this repository is provided within `requirements.txt` which shoule be installed into your python envionment.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
-```
-cd existing_repo
-git remote add origin https://gitlab.lennoxconsulting.com.au/meta/cisco-monitor.git
-git branch -M main
-git push -uf origin main
+```bash
+pip install -r requirements.txt
 ```
 
-## Integrate with your tools
+Test ping and traceroute actions can be simply performed by modifying the actions at the end of the ``traceroute.py` script to perform the ping() or traceroute() desired and executing:
 
-- [ ] [Set up project integrations](https://gitlab.lennoxconsulting.com.au/meta/cisco-monitor/-/settings/integrations)
+```bash
+python traceroute.py
+```
 
-## Collaborate with your team
+_Note: This must be executed as a privledged user to work. On a Linux/MacOS operating system it will generally be by the root user, for Windows it required Administrator privledges._
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## The Theory Behind TraceRoute
+Need add this....
 
-## Test and Deploy
+## TraceRoute Python Module
 
-Use the built-in continuous integration in GitLab.
+A python module `traceroute.py` is provided that implements the function of the standard network tools _ping_ and _traceroute_.
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+More details on how these modules work are provided within the module docstrings.
 
-***
+### Usage
+The `ping()` function within the module is defined as:
 
-# Editing this README
+```python
+def ping(
+        endpoint: str,
+        port: int = 33434,
+        ttl: int = 30,
+        timeout: float = 3,
+        packets: int = 3,       
+    ) -> dict:
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+The parameters provided to the `ping()` function are:
+* `endpoint` - Target network address or hostname to route the UDP packets too
+* `port` - Port to assign to the UDP packets, standard port is 33434
+* `ttl` - The Time To Live for UDP packets sent
+* `timeout` - Time to wait for ICMP response in seconds
+* `packets` - Number of UCP packets to send
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+The returned dictionary structure is:
 
-## Name
-Choose a self-explaining name for your project.
+```
+{
+    source:  Source network interface
+    target:  Target destination IP address
+    dest:    Destination address from ICMP
+    ttl:     Set Time To Live
+    packets: Number of packets issued in the ping
+    ping_time: [
+        {
+            attempt: Sequence counter of the ping
+            address: Network address returned by the ICMP
+            time:    Latency time in milliseconds
+            type:    ICMP packet type
+            code:    ICMP packed code
+        }
+    ]
+}
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+The `traceroute()` function within the module is defined as:
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```python
+def traceroute(
+        endpoint: str,
+        port: int = 33434,
+        max_ttl: int = 30,
+        timeout: int = 3,
+        packets: int = 3,  
+    ) -> dict:
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+The parameters provided to the `traceroute()` function are:
+* `endpoint` - Target network address or hostname to route the UDP packets too
+* `port` - Port to assign to the UDP packets, standard port is 33434
+* `max_ttl` - Maximum Time To Live for UDP packets sent
+* `timeout` - Time to wait for ICMP response in seconds
+* `packets` - Number of UCP packets to send
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+The returned dictionary structure is:
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+```
+{
+    target:  Target destination IP address
+    ttl:     Set Time To Live
+    packets: Number of packets issued in the ping
+    ping_time: [ { ping() dict } ]
+}
+```
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## TraceRoute API Service
+Need to put some content here.....(TODO)
