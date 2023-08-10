@@ -22,12 +22,12 @@ import time
 
 
 def ping(
-        endpoint: str,
-        port: int = 33434,
-        ttl: int = 30,
-        timeout: float = 3,
-        packets: int = 3,       
-    ) -> dict:
+    endpoint: str,
+    port: int = 33434,
+    ttl: int = 30,
+    timeout: float = 3,
+    packets: int = 3,       
+) -> dict:
     """Perform a network 'Ping' to a remote host collecting latency data.
     
     Using the provided endpoint hostname or address, a standard network ping
@@ -82,12 +82,12 @@ def ping(
     """
 
     def _ping_struct(
-            counter : int,
-            address: str,
-            latency: float,
-            pkt_type: int = None,
-            pkt_code: int = None,    
-        ):
+        counter : int,
+        address: str,
+        latency: float,
+        pkt_type: int = None,
+        pkt_code: int = None,    
+    ):
 
         return {
             'attempt': counter,
@@ -167,12 +167,12 @@ def ping(
 
 
 def traceroute(
-        endpoint: str,
-        port: int = 33434,
-        max_ttl: int = 30,
-        timeout: int = 3,
-        packets: int = 3,  
-    ) -> dict:
+    endpoint: str,
+    port: int = 33434,
+    max_ttl: int = 30,
+    timeout: int = 3,
+    packets: int = 3,  
+) -> dict:
     """Perform a network 'traceroute' to map packet routing.
 
     Using the provided endpoing address or hostname a traceroute is performed
