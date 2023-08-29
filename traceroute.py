@@ -20,6 +20,12 @@ import socket
 import struct
 import time
 
+# ICMP Type Numbers
+#   https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
+ICMP_ECHO_REPLY = 0
+ICMP_ECHO = 8
+ICMP_TIME_EXCEEDED = 11
+
 
 def ping(
     endpoint: str,
@@ -116,13 +122,14 @@ def ping(
     udp_sock.setsockopt(socket.SOL_IP, socket.IP_TTL, ttl)
 
     ping_data = {
-        'source': udp_sock.getsockname(),
-        'target': dest_addr,
-        'ttl': ttl,
-        'packets': packets,
-        'ping_time': [],
+        "source": udp_sock.getsockname(),
+        "target": dest_addr,
+        "ttl": ttl,
+        "packets": packets,
+        "ping_time": [],
     }
 
+    dest_addrs = []
     for packet_no in range(packets):
         udp_sock.sendto(str("Don't Panic!").encode(), (dest_addr, port))
         timer_start = time.time()
@@ -131,25 +138,27 @@ def ping(
         try:
             data, addr = icmp_sock.recvfrom(1024)
             timer_end = time.time()
-            pkt_type, pkt_code, *_ = struct.unpack('bbHHh', data[20:28])
+            icmp_type, icmp_code, *_ = struct.unpack("bbHHh", data[20:28])
         except:
             pass
 
         if addr is not None:
             time_ms = round((timer_end - timer_start) * 1000, 4)
+            if addr[0] not in dest_addrs:
+                dest_addrs.append(addr[0])
 
-            ping_data['ping_time'].append(
+            ping_data["ping_time"].append(
                 _ping_struct(
                     packet_no,
                     addr[0],
                     time_ms,
-                    pkt_type,
-                    pkt_code,
+                    icmp_type,
+                    icmp_code,
                 )
             )
 
         else:
-            ping_data['ping_time'].append(
+            ping_data["ping_time"].append(
                 _ping_struct(
                     packet_no,
                     '*',
@@ -160,8 +169,11 @@ def ping(
     icmp_sock.close()
     udp_sock.close()
 
-    # we need to consolidate data into the header......
-    ping_data['dest'] = ping_data['ping_time'][0]['address']
+    if len(dest_addrs) == 1:
+        ping_data["dest"] = dest_addrs[0]
+    else:
+        # Not sure of the best way to handle this.....
+        ping_data["dest"] = None if len(dest_addrs) == 0 else dest_addrs[0]
 
     return ping_data
 
