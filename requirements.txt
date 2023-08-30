@@ -1,5 +1,7 @@
 flask
 requests
 matplotlib
+mplcyberpunk
 cartopy
 scipy
+geopy

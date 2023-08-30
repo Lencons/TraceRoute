@@ -105,7 +105,10 @@ def ping(
 
 
     # convert hostname to address
-    dest_addr = socket.gethostbyname(endpoint)
+    try:
+        dest_addr = socket.gethostbyname(endpoint)
+    except:
+        raise ValueError
 
     icmp_sock = socket.socket(
         socket.AF_INET,
